@@ -22,11 +22,19 @@ interface City {
 }
 
 interface MetroArea {
-  metroArea: string,
-  metroAreaPopulation: number
+  name: string,
+  population: number,
+  url: string
 }
 
-interface ExtendedCity extends City, MetroArea {}
+interface ExtendedCity {
+  city: string,
+  state: string,
+  population: number,
+  populationDensity: number,
+  metroArea: string,
+  metroAreaPopulation: number,
+}
 
 const fetchCities = cache<City[]>("cities", async () => {
   const response = await scrapeIt(CITIES_URL, {
@@ -58,16 +66,24 @@ const fetchCities = cache<City[]>("cities", async () => {
   return response.data.cities;
 });
 
+export const fetchMetroAreaContent = cache<string>("metro-areas", async (url: string) => {
+  const response = await scrapeIt(url, {
+    content: "#bodyContent"
+  }) as { data: { content: string } };
+
+  return response.data.content;
+});
+
 export const fetchMetroAreas = cache<MetroArea[]>("metro-areas", async () => {
   const response = await scrapeIt(METRO_AREAS_URL, {
     metroAreas: {
       listItem: "table:nth-of-type(2) tr",
       data: {
-        metroArea: {
+        name: {
           selector: "td:nth-of-type(2)",
           convert: value => value.replace(/,.*/, "").replaceAll("-", "/")
         },
-        metroAreaPopulation: {
+        population: {
           selector: "td:nth-of-type(3)",
           convert: parseNumber
         },
@@ -80,7 +96,16 @@ export const fetchMetroAreas = cache<MetroArea[]>("metro-areas", async () => {
     }
   }) as { data: { metroAreas: MetroArea[] } };
 
-  return response.data.metroAreas;
+  const { metroAreas } = response.data;
+
+  return Promise.all(
+    metroAreas.map(async metroArea => {
+      return {
+        ...metroArea,
+        content: await fetchMetroAreaContent(metroArea.url)
+      };
+    })
+  );
 });
 
 export async function fetchExtendedCities() {

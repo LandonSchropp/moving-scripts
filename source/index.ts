@@ -1,5 +1,5 @@
-import { fetchCities } from "./cities";
+import { fetchExtendedCities } from "./cities";
 
 (async () => {
-  console.log(await fetchCities());
+  console.log(await fetchExtendedCities());
 })();

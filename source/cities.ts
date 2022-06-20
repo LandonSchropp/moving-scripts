@@ -1,4 +1,3 @@
-import _ from "lodash";
 import scrapeIt from "scrape-it";
 
 const CITIES_URL = "https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population";
@@ -8,11 +7,16 @@ function parseNumber(value: string) {
   return parseInt(value.replace(",", ""), 10);
 }
 
+function wikipediaUrl(path: string) {
+  return `https://en.wikipedia.org${ path }`;
+}
+
 interface City {
-  city: string,
+  name: string,
   state: string,
   population: number,
-  populationDensity: number
+  populationDensity: number,
+  url: string
 }
 
 interface MetroArea {
@@ -27,7 +31,7 @@ export async function fetchCities() {
     cities: {
       listItem: "table:nth-of-type(5) tr",
       data: {
-        city: {
+        name: {
           selector: "td:nth-of-type(1)",
           convert: value => value.replace(/\[.*\]/, "")
         },
@@ -39,6 +43,11 @@ export async function fetchCities() {
         populationDensity: {
           selector: "td:nth-of-type(8)",
           convert: parseNumber
+        },
+        url: {
+          selector: "td:nth-of-type(1) a",
+          attr: "href",
+          convert: wikipediaUrl
         }
       }
     }
@@ -59,6 +68,11 @@ export async function fetchMetroAreas() {
         metroAreaPopulation: {
           selector: "td:nth-of-type(3)",
           convert: parseNumber
+        },
+        url: {
+          selector: "td:nth-of-type(2) a",
+          attr: "href",
+          convert: wikipediaUrl
         }
       }
     }
@@ -68,7 +82,5 @@ export async function fetchMetroAreas() {
 }
 
 export async function fetchExtendedCities() {
-  const cities = await fetchCities();
-
-  return cities;
+  return await fetchMetroAreas();
 }

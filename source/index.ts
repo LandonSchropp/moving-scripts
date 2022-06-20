@@ -1,1 +1,5 @@
-console.log("HELLO!");
+import { fetchCities } from "./cities";
+
+(async () => {
+  console.log(await fetchCities());
+})();

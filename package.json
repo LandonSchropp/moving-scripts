@@ -1,0 +1,8 @@
+{
+  "name": "moving-scripts",
+  "description": "A collection of scripts to help with our move",
+  "repository": "https://github.com/LandonSchropp/moving-scripts",
+  "author": "Landon Schropp <schroppl@gmail.com>",
+  "license": "UNLICENSED",
+  "private": true
+}

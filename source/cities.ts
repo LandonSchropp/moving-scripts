@@ -1,5 +1,7 @@
 import scrapeIt from "scrape-it";
 
+import { cache } from "./cache";
+
 const CITIES_URL = "https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population";
 const METRO_AREAS_URL = "https://en.wikipedia.org/wiki/Metropolitan_statistical_area";
 
@@ -26,7 +28,7 @@ interface MetroArea {
 
 interface ExtendedCity extends City, MetroArea {}
 
-export async function fetchCities() {
+const fetchCities = cache<City[]>("cities", async () => {
   const response = await scrapeIt(CITIES_URL, {
     cities: {
       listItem: "table:nth-of-type(5) tr",
@@ -54,9 +56,9 @@ export async function fetchCities() {
   }) as { data: { cities: City[] } };
 
   return response.data.cities;
-}
+});
 
-export async function fetchMetroAreas() {
+export const fetchMetroAreas = cache<MetroArea[]>("metro-areas", async () => {
   const response = await scrapeIt(METRO_AREAS_URL, {
     metroAreas: {
       listItem: "table:nth-of-type(2) tr",
@@ -79,7 +81,7 @@ export async function fetchMetroAreas() {
   }) as { data: { metroAreas: MetroArea[] } };
 
   return response.data.metroAreas;
-}
+});
 
 export async function fetchExtendedCities() {
   return await fetchMetroAreas();

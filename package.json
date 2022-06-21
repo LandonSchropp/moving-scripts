@@ -6,6 +6,7 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "@notionhq/client": "^1.0.4",
     "@types/fs-extra": "^9.0.13",
     "fs-extra": "^10.1.0",
     "scrape-it": "^5.3.2",

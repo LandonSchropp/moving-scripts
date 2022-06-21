@@ -1,5 +1,5 @@
-import { fetchMetroAreas } from "./cities";
+import { fetchCities } from "./notion";
 
 (async () => {
-  console.log(await fetchMetroAreas());
+  console.log(await fetchCities());
 })();

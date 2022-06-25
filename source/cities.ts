@@ -2,6 +2,7 @@ import scrapeIt from "scrape-it";
 import { usaStates } from "typed-usa-states";
 
 import { cache } from "./cache";
+import { MetroArea } from "./types";
 
 const METRO_AREAS_URL = "https://en.wikipedia.org/wiki/Metropolitan_statistical_area";
 const METRO_AREA_REGEX = /^([^,]+),\s+([^,]+)\s+MSA/;
@@ -14,17 +15,12 @@ function stateAbbreviationToName(abbreviation: string) {
   return usaStates.find(state => state.abbreviation === abbreviation)?.name;
 }
 
-interface MetroArea {
-  name: string,
-  population: number
-}
-
 export const fetchMetroAreas = cache<MetroArea[]>("metro-areas", async () => {
   const response = await scrapeIt(METRO_AREAS_URL, {
     metroAreas: {
       listItem: "table:nth-of-type(2) tr",
       data: {
-        name: {
+        location: {
           selector: "td:nth-of-type(2)",
           convert: value => value.match(METRO_AREA_REGEX)?.[1].replaceAll("-", "/")
         },

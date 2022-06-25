@@ -1,7 +1,8 @@
 import { Client } from "@notionhq/client";
 import { QueryDatabaseResponse } from "@notionhq/client/build/src/api-endpoints";
 import _ from "lodash";
-import { camelCase } from "voca";
+
+import { MetroArea } from "./types";
 
 // Extract the Notion types from the exported type in Notion.
 // https://github.com/makenotion/notion-sdk-js/issues/280#issuecomment-1099798305
@@ -16,12 +17,28 @@ type NotionProperty = NotionPageProperties["type"];
 
 const CITIES_DATABASE_ID = "c0e8bf94ba874800b6e66af872e32ce8";
 
+const SCHEMA = {
+  "States": "multi_select",
+  "Population": "number",
+  "Median House Price": "number",
+  "Number of Sunny Days": "number",
+  "Cost of Living Index": "number",
+  "School Rating Index": "number",
+  "Location": "title"
+};
+
 // Initializing a client
 const notion = new Client({
   auth: process.env.NOTION_TOKEN
 });
 
-const convertKeyFromNotionFormat = camelCase;
+const convertKeyFromNotionFormat = _.camelCase;
+
+function convertKeyToNotionFormat(key: string) {
+  return _.startCase(key)
+    .replaceAll("Of", "of")
+    .replaceAll("To", "to");
+}
 
 function convertPropertyFromNotionFormat(notionProperty: NotionProperty) {
   if ("title" in notionProperty) {
@@ -39,10 +56,39 @@ function convertPropertyFromNotionFormat(notionProperty: NotionProperty) {
   throw new Error(`Unknown type for property ${ JSON.stringify(notionProperty) }`);
 }
 
+function convertPropertyToNotionFormat(value: number | string | string[] | null, key: string) {
+  if (!(key in SCHEMA)) {
+    throw new Error(`The key ${ key } in not in the schema!`);
+  }
+
+  const type = SCHEMA[key];
+
+  // The required values for the properties can be found here:
+  // https://developers.notion.com/reference/property-value-object#title-property-values
+  switch (type) {
+    case "title":
+      return { "title": [ { "type": "text", "text": { "content": value } } ] };
+    case "number":
+      return { number: value };
+    case "multi_select":
+      // eslint-disable-next-line no-extra-parens
+      return { multi_select: (value as string[]).map(option => ({ name: option })) };
+    default:
+      throw new Error(`Unknown type ${ type }`);
+  }
+}
+
 function notionRowToMetroArea(notionPage: NotionDatabaseQueryResult) {
   return _.chain(notionPage.properties)
     .mapValues(convertPropertyFromNotionFormat)
     .mapKeys((_value, key) => convertKeyFromNotionFormat(key))
+    .value();
+}
+
+function metroAreaToNotionProperties(metroArea: MetroArea) {
+  return _.chain(metroArea)
+    .mapKeys((_value, key) => convertKeyToNotionFormat(key))
+    .mapValues(convertPropertyToNotionFormat)
     .value();
 }
 
@@ -52,4 +98,13 @@ export async function fetchCities() {
   });
 
   return response.results.map(notionRowToMetroArea);
+}
+
+export async function createMetroAreaInNotion(metroArea: MetroArea) {
+  await notion.pages.create({
+    parent: {
+      database_id: CITIES_DATABASE_ID
+    },
+    properties: metroAreaToNotionProperties(metroArea)
+  });
 }

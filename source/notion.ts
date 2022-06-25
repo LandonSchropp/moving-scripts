@@ -7,9 +7,9 @@ import { camelCase } from "voca";
 // https://github.com/makenotion/notion-sdk-js/issues/280#issuecomment-1099798305
 type AllKeys<T> = T extends never ? never : keyof T;
 type OptionalKeys<T> = Exclude<AllKeys<T>, keyof T>;
-type Idx<T, K extends PropertyKey, D = never> = T extends never ? never : K extends keyof T ? T[K]
+type Index<T, K extends PropertyKey, D = never> = T extends never ? never : K extends keyof T ? T[K]
   : D;
-type Widen<T> = { [K in OptionalKeys<T>]?: Idx<T, K>; } & { [K in keyof T]: T[K] };
+type Widen<T> = { [K in OptionalKeys<T>]?: Index<T, K>; } & { [K in keyof T]: T[K] };
 type NotionDatabaseQueryResult = Widen<QueryDatabaseResponse["results"][number]>;
 type NotionPageProperties = NonNullable<NotionDatabaseQueryResult["properties"]>;
 type NotionProperty = NotionPageProperties["type"];

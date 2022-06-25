@@ -1,19 +1,7 @@
 import { Client } from "@notionhq/client";
-import { QueryDatabaseResponse } from "@notionhq/client/build/src/api-endpoints";
 import _ from "lodash";
 
 import { MetroArea } from "./types";
-
-// Extract the Notion types from the exported type in Notion.
-// https://github.com/makenotion/notion-sdk-js/issues/280#issuecomment-1099798305
-type AllKeys<T> = T extends never ? never : keyof T;
-type OptionalKeys<T> = Exclude<AllKeys<T>, keyof T>;
-type Index<T, K extends PropertyKey, D = never> = T extends never ? never : K extends keyof T ? T[K]
-  : D;
-type Widen<T> = { [K in OptionalKeys<T>]?: Index<T, K>; } & { [K in keyof T]: T[K] };
-type NotionDatabaseQueryResult = Widen<QueryDatabaseResponse["results"][number]>;
-type NotionPageProperties = NonNullable<NotionDatabaseQueryResult["properties"]>;
-type NotionProperty = NotionPageProperties["type"];
 
 const CITIES_DATABASE_ID = "c0e8bf94ba874800b6e66af872e32ce8";
 
@@ -32,28 +20,10 @@ const notion = new Client({
   auth: process.env.NOTION_TOKEN
 });
 
-const convertKeyFromNotionFormat = _.camelCase;
-
 function convertKeyToNotionFormat(key: string) {
   return _.startCase(key)
     .replaceAll("Of", "of")
     .replaceAll("To", "to");
-}
-
-function convertPropertyFromNotionFormat(notionProperty: NotionProperty) {
-  if ("title" in notionProperty) {
-    return notionProperty.title[0].plain_text;
-  }
-
-  if ("number" in notionProperty) {
-    return notionProperty.number;
-  }
-
-  if ("multi_select" in notionProperty) {
-    return notionProperty.multi_select.map(value => value.name);
-  }
-
-  throw new Error(`Unknown type for property ${ JSON.stringify(notionProperty) }`);
 }
 
 function convertPropertyToNotionFormat(value: number | string | string[] | null, key: string) {
@@ -78,13 +48,6 @@ function convertPropertyToNotionFormat(value: number | string | string[] | null,
   }
 }
 
-function notionRowToMetroArea(notionPage: NotionDatabaseQueryResult) {
-  return _.chain(notionPage.properties)
-    .mapValues(convertPropertyFromNotionFormat)
-    .mapKeys((_value, key) => convertKeyFromNotionFormat(key))
-    .value();
-}
-
 function metroAreaToNotionProperties(metroArea: MetroArea) {
   return _.chain(metroArea)
     .mapKeys((_value, key) => convertKeyToNotionFormat(key))
@@ -92,19 +55,49 @@ function metroAreaToNotionProperties(metroArea: MetroArea) {
     .value();
 }
 
-export async function fetchCities() {
+async function fetchMetroAreasFromNotion() {
   const response = await notion.databases.query({
     database_id: CITIES_DATABASE_ID
   });
 
-  return response.results.map(notionRowToMetroArea);
+  return response.results;
 }
 
-export async function createMetroAreaInNotion(metroArea: MetroArea) {
+async function createMetroAreaInNotion(metroArea: MetroArea) {
   await notion.pages.create({
     parent: {
       database_id: CITIES_DATABASE_ID
     },
     properties: metroAreaToNotionProperties(metroArea)
   });
+}
+
+async function updateMetroAreaInNotion(pageId: string, metroArea: MetroArea) {
+  await notion.pages.update({
+    page_id: pageId,
+    properties: metroAreaToNotionProperties(metroArea)
+  });
+}
+
+export async function createOrUpdateMetroAreaInNotion(metroArea: MetroArea) {
+  const existingMetroAreaPages = await fetchMetroAreasFromNotion();
+
+  const matchingMetroAreaPage = _.find(existingMetroAreaPages, {
+    properties: {
+      "Location": {
+        title: [
+          {
+            plain_text: metroArea.location
+          }
+        ]
+      }
+    }
+  });
+
+  if (matchingMetroAreaPage) {
+    await updateMetroAreaInNotion(matchingMetroAreaPage.id, metroArea);
+  }
+  else {
+    await createMetroAreaInNotion(metroArea);
+  }
 }

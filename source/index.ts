@@ -1,13 +1,13 @@
-import { createMetroAreaInNotion, fetchCities } from "./notion";
+import { createOrUpdateMetroAreaInNotion } from "./notion";
 
 (async () => {
-  await createMetroAreaInNotion({
+  await createOrUpdateMetroAreaInNotion({
     states: [ "California", "New York" ],
     costOfLivingIndex: 1,
     numberOfSunnyDays: 2,
     medianHousePrice: 3,
     schoolRatingIndex: 4,
-    population: 5,
+    population: 10,
     location: "Banana"
   });
 })();

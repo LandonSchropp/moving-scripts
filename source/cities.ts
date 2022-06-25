@@ -8,7 +8,7 @@ const METRO_AREAS_URL = "https://en.wikipedia.org/wiki/Metropolitan_statistical_
 const METRO_AREA_REGEX = /^([^,]+),\s+([^,]+)\s+MSA/;
 
 function parseNumber(value: string) {
-  return parseInt(value.replace(",", ""), 10);
+  return parseInt(value.replaceAll(",", ""), 10);
 }
 
 function stateAbbreviationToName(abbreviation: string) {

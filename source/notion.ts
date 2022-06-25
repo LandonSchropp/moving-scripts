@@ -1,7 +1,17 @@
 import { Client } from "@notionhq/client";
+import { QueryDatabaseResponse } from "@notionhq/client/build/src/api-endpoints";
 import _ from "lodash";
 
 import { MetroArea } from "./types";
+
+// Extract the Notion types from the exported type in Notion.
+// https://github.com/makenotion/notion-sdk-js/issues/280#issuecomment-1099798305
+type AllKeys<T> = T extends never ? never : keyof T;
+type OptionalKeys<T> = Exclude<AllKeys<T>, keyof T>;
+type Index<T, K extends PropertyKey, D = never> = T extends never ? never : K extends keyof T ? T[K]
+  : D;
+type Widen<T> = { [K in OptionalKeys<T>]?: Index<T, K>; } & { [K in keyof T]: T[K] };
+type NotionDatabaseQueryResult = Widen<QueryDatabaseResponse["results"][number]>;
 
 const CITIES_DATABASE_ID = "c0e8bf94ba874800b6e66af872e32ce8";
 
@@ -79,9 +89,10 @@ async function updateMetroAreaInNotion(pageId: string, metroArea: MetroArea) {
   });
 }
 
-export async function createOrUpdateMetroAreaInNotion(metroArea: MetroArea) {
-  const existingMetroAreaPages = await fetchMetroAreasFromNotion();
-
+async function createOrUpdateMetroAreaInNotion(
+  existingMetroAreaPages: NotionDatabaseQueryResult[],
+  metroArea: MetroArea
+) {
   const matchingMetroAreaPage = _.find(existingMetroAreaPages, {
     properties: {
       "Location": {
@@ -99,5 +110,13 @@ export async function createOrUpdateMetroAreaInNotion(metroArea: MetroArea) {
   }
   else {
     await createMetroAreaInNotion(metroArea);
+  }
+}
+
+export async function syncMetroAreasToNotion(metroAreas: MetroArea[]) {
+  const existingMetroAreaPages = await fetchMetroAreasFromNotion();
+
+  for (const metroArea of metroAreas) {
+    await createOrUpdateMetroAreaInNotion(existingMetroAreaPages, metroArea);
   }
 }

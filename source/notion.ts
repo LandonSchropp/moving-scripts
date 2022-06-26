@@ -22,7 +22,7 @@ const SCHEMA = {
   "Number of Sunny Days": "number",
   "Cost of Living Index": "number",
   "School Rating Index": "number",
-  "Location": "title"
+  "Cities": "title"
 };
 
 // Initializing a client
@@ -105,10 +105,10 @@ async function createOrUpdateMetroAreaInNotion(
 ) {
   const matchingMetroAreaPage = _.find(existingMetroAreaPages, {
     properties: {
-      "Location": {
+      "Cities": {
         title: [
           {
-            plain_text: metroArea.location
+            plain_text: metroArea.cities
           }
         ]
       }

@@ -27,8 +27,8 @@ async function latestPriceForMetroArea(fileName: string, url: string, metroArea:
   const data = await downloadData(fileName, url);
 
   const match = data.find((region : { RegionName: string }) => {
-    return _.some(metroArea.location, location => {
-      return region.RegionName.includes(location);
+    return _.some(metroArea.cities, city => {
+      return region.RegionName.includes(city);
     });
   })as Record<string, string>;
 

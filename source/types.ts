@@ -5,7 +5,7 @@ export type MetroArea = {
   medianHousePrice?: number,
   schoolRatingIndex?: number,
   population: number,
-  location: string[],
+  cities: string[],
   topTierHousingPrice?: number | null,
   middleTierHousingPrice?: number | null,
   bottomTierHousingPrice?: number | null,

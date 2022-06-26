@@ -21,7 +21,7 @@ export const fetchMetroAreas = cache<MetroArea[]>("metro-areas", async () => {
     metroAreas: {
       listItem: "table:nth-of-type(2) tr",
       data: {
-        location: {
+        cities: {
           selector: "td:nth-of-type(2)",
           convert: value => value.match(METRO_AREA_REGEX)?.[1].split(/[–\-/]/g)
         },

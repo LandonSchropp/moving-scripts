@@ -47,7 +47,17 @@ function convertPropertyToNotionFormat(value: number | string | string[] | null,
   // https://developers.notion.com/reference/property-value-object#title-property-values
   switch (type) {
     case "title":
-      return { "title": [ { "type": "text", "text": { "content": value } } ] };
+      return {
+        "title": [
+          {
+            "type": "text",
+            "text": {
+              // eslint-disable-next-line no-extra-parens
+              "content": (value as string[]).join(" / ")
+            }
+          }
+        ]
+      };
     case "number":
       return { number: value };
     case "multi_select":

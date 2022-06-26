@@ -1,3 +1,4 @@
+import { tail } from "lodash";
 import scrapeIt from "scrape-it";
 import { usaStates } from "typed-usa-states";
 
@@ -22,7 +23,7 @@ export const fetchMetroAreas = cache<MetroArea[]>("metro-areas", async () => {
       data: {
         location: {
           selector: "td:nth-of-type(2)",
-          convert: value => value.match(METRO_AREA_REGEX)?.[1].replaceAll("-", "/")
+          convert: value => value.match(METRO_AREA_REGEX)?.[1].split(/[–\-/]/g)
         },
         states: {
           selector: "td:nth-of-type(2)",
@@ -38,5 +39,5 @@ export const fetchMetroAreas = cache<MetroArea[]>("metro-areas", async () => {
     }
   }) as { data: { metroAreas: MetroArea[] } };
 
-  return response.data.metroAreas;
+  return tail(response.data.metroAreas);
 });

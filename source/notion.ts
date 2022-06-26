@@ -23,7 +23,7 @@ const SCHEMA = {
   "Cost of Living Index": "number",
   "School Rating Index": "number",
   "Top Tier Housing Price": "number",
-  "Mid Tier Housing Price": "number",
+  "Middle Tier Housing Price": "number",
   "Bottom Tier Housing Price": "number",
   "Three Bedroom Housing Price": "number",
   "Cities": "title"
@@ -36,8 +36,9 @@ const notion = new Client({
 
 function convertKeyToNotionFormat(key: string) {
   return _.startCase(key)
-    .replaceAll("Of", "of")
-    .replaceAll("To", "to");
+    .replaceAll(" Of", " of")
+    .replaceAll(" To", " to")
+    .replaceAll(" The", " the");
 }
 
 function convertPropertyToNotionFormat(value: number | string | string[] | null, key: string) {

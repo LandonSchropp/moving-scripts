@@ -2,6 +2,7 @@ import { parse } from "csv-parse/sync";
 import _ from "lodash";
 
 import { cacheDownload, cacheJSON } from "./cache";
+import { stringMatchesMetroArea } from "./metro-areas";
 import { MetroArea, MetroAreaHousingPrices } from "./types";
 
 const BASE_URL = "https://files.zillowstatic.com/research/public_csvs/zhvi";
@@ -26,10 +27,8 @@ async function latestPriceForMetroArea(fileName: string, url: string, metroArea:
 
   // TODO: This should also match based on *state*
   const match = data.find((region : { RegionName: string }) => {
-    return _.some(metroArea.cities, city => {
-      return region.RegionName.includes(city);
-    });
-  })as Record<string, string>;
+    return stringMatchesMetroArea(region.RegionName, metroArea);
+  }) as Record<string, string>;
 
   if (!match) {
     return null;

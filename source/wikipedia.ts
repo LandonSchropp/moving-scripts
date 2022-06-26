@@ -1,8 +1,8 @@
 import { tail } from "lodash";
 import scrapeIt from "scrape-it";
-import { usaStates } from "typed-usa-states";
 
 import { cacheJSON } from "./cache";
+import { stateAbbreviationToName } from "./metro-areas";
 import { JSONValue, MetroArea } from "./types";
 
 const METRO_AREAS_URL = "https://en.wikipedia.org/wiki/Metropolitan_statistical_area";
@@ -10,10 +10,6 @@ const METRO_AREA_REGEX = /^([^,]+),\s+([^,]+)\s+MSA/;
 
 function parseNumber(value: string) {
   return parseInt(value.replaceAll(",", ""), 10);
-}
-
-function stateAbbreviationToName(abbreviation: string) {
-  return usaStates.find(state => state.abbreviation === abbreviation)?.name;
 }
 
 export async function fetchMetroAreas() {

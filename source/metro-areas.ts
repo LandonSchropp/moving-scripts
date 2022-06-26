@@ -39,3 +39,7 @@ export function stringMatchesMetroArea(string: string, metroArea: MetroArea) {
 export function metroAreaCitiesToTitle(cities: string[]) {
   return cities.join(" / ");
 }
+
+export function metroAreaTitle(metroArea: MetroArea) {
+  return metroAreaCitiesToTitle(metroArea.cities);
+}

@@ -5,7 +5,7 @@ import {
 } from "@notionhq/client/build/src/api-endpoints";
 import _ from "lodash";
 
-import { metroAreaCitiesToTitle } from "./metro-areas";
+import { metroAreaCitiesToTitle, metroAreaTitle } from "./metro-areas";
 import { ExtendedMetroArea } from "./types";
 
 // Extract the Notion types from the exported type in Notion.
@@ -154,7 +154,14 @@ async function createOrUpdateMetroAreaInNotion(
 export async function syncMetroAreasToNotion(metroAreas: ExtendedMetroArea[]) {
   const existingMetroAreaPages = await fetchMetroAreasFromNotion();
 
-  for (const metroArea of metroAreas) {
+  for (let i = 0; i < metroAreas.length; i++) {
+    const metroArea = metroAreas[i];
+    const progress = `${ i + 1 } / ${ metroAreas.length }`;
+
+    // eslint-disable-next-line no-console
+    console.log(`☁️  ${ progress }: Syncing metro area ${ metroAreaTitle(metroArea) } to Notion`);
+
     await createOrUpdateMetroAreaInNotion(existingMetroAreaPages, metroArea);
   }
+
 }

@@ -75,6 +75,7 @@ function convertPropertyToNotionFormat(value: number | string | string[] | null,
 
 function metroAreaToNotionProperties(metroArea: MetroArea) {
   return _.chain(metroArea)
+    .omitBy(value => _.isNil(value))
     .mapKeys((_value, key) => convertKeyToNotionFormat(key))
     .mapValues(convertPropertyToNotionFormat)
     .value();

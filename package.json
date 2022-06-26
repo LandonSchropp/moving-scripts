@@ -23,7 +23,7 @@
   },
   "scripts": {
     "lint": "eslint --max-warnings=0 .",
-    "fetch": "ts-node source/index.ts"
+    "sync": "ts-node source/index.ts"
   },
   "devDependencies": {
     "@landonschropp/eslint-config": "0.11.1",

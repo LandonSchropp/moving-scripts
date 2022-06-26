@@ -1,16 +1,9 @@
 import { mkdirp, pathExists, readFile, writeFile } from "fs-extra";
-import fetch from "node-fetch";
 
+import { download } from "./download";
 import { JSONValue } from "./types";
 
 const CACHE_DIRECTORY = `${ __dirname }/../cache`;
-
-/**
- * Downloads the contents of a URL.
- */
-export async function download(url: string) {
-  return await (await fetch(url)).text();
-}
 
 /**
  * If a cache file does not exist, calls the function and writes the results to a file. If the

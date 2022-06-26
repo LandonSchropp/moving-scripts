@@ -11,6 +11,7 @@
     "@types/lodash": "^4.14.182",
     "@types/node": "16",
     "@types/voca": "^1.4.2",
+    "csv-parse": "^5.2.0",
     "fs-extra": "^10.1.0",
     "lodash": "^4.17.21",
     "node-fetch": "2",

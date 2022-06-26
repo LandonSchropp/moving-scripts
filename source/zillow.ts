@@ -38,7 +38,9 @@ async function latestPriceForMetroArea(fileName: string, url: string, metroArea:
   return key ? parseInt(match[key], 10) : null;
 }
 
-export async function getMetroAreaHousingPrices(metroArea: MetroArea) {
+export async function getMetroAreaHousingPrices(
+  metroArea: MetroArea
+): Promise<MetroAreaHousingPrices> {
   const metroAreaName = metroArea.cities.join("-").toLowerCase().replaceAll(/\W/g, "-");
   const fileName = `${ metroAreaName }-latest-housing-prices.json`;
 

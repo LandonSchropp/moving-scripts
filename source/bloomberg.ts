@@ -2,7 +2,7 @@ import _ from "lodash";
 
 import { cacheDownload } from "./cache";
 import { stringMatchesMetroArea } from "./metro-areas";
-import { MetroArea } from "./types";
+import { MetroArea, MetroAreaPolitics } from "./types";
 
 const MSA_ELECTION_RESULTS_URL = "https://www.bloomberg.com/toaster/v2/charts/"
   + "557c2ac5147f460495cc75c25309ea66.html";
@@ -18,12 +18,14 @@ export async function fetchPoliticalData() {
   return JSON.parse(json) as string[][];
 }
 
-export async function fetchPoliticalDataForMetroArea(metroArea: MetroArea) {
+export async function fetchPoliticalDataForMetroArea(
+  metroArea: MetroArea
+) : Promise<MetroAreaPolitics> {
   return _.chain(await fetchPoliticalData())
     .find(row => stringMatchesMetroArea(row[1], metroArea))
     .thru(row => ({
       winnerOf2020Election: row[2],
-      winnerOf2020ElectionVotePercentage: parseFloat(row[3])
+      winnerOf2020ElectionVotePercentage: parseFloat(row[3]) / 100
     }))
     .value();
 }

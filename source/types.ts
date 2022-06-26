@@ -7,23 +7,24 @@ export type JSONValue =
   | { [x: string]: JSONValue }
   | Array<JSONValue>;
 
-export type MetroAreaHousingPrices = {
+export interface MetroArea {
+  cities: string[],
+  states: string[],
+  population: number
+  numberOfSunnyDays?: number,
+  schoolRatingIndex?: number,
+}
+
+export interface MetroAreaHousingPrices {
   topTierHousingPrice: number | null,
   middleTierHousingPrice: number | null,
   bottomTierHousingPrice: number | null,
   threeBedroomHousingPrice: number | null
-};
-
-export type MetroArea = {
-  states: string[],
-  costOfLivingIndex?: number,
-  numberOfSunnyDays?: number,
-  medianHousePrice?: number,
-  schoolRatingIndex?: number,
-  population: number,
-  cities: string[],
-  topTierHousingPrice?: number | null,
-  middleTierHousingPrice?: number | null,
-  bottomTierHousingPrice?: number | null,
-  threeBedroomHousingPrice?: number | null
 }
+
+export interface MetroAreaPolitics {
+  winnerOf2020Election: string | null,
+  winnerOf2020ElectionVotePercentage: number | null
+}
+
+export interface ExtendedMetroArea extends MetroArea, MetroAreaHousingPrices, MetroAreaPolitics {}

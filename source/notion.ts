@@ -1,8 +1,11 @@
 import { Client } from "@notionhq/client";
-import { QueryDatabaseResponse } from "@notionhq/client/build/src/api-endpoints";
+import {
+  QueryDatabaseResponse,
+  UpdatePageParameters
+} from "@notionhq/client/build/src/api-endpoints";
 import _ from "lodash";
 
-import { MetroArea } from "./types";
+import { ExtendedMetroArea } from "./types";
 
 // Extract the Notion types from the exported type in Notion.
 // https://github.com/makenotion/notion-sdk-js/issues/280#issuecomment-1099798305
@@ -12,10 +15,13 @@ type Index<T, K extends PropertyKey, D = never> = T extends never ? never : K ex
   : D;
 type Widen<T> = { [K in OptionalKeys<T>]?: Index<T, K>; } & { [K in keyof T]: T[K] };
 type NotionDatabaseQueryResult = Widen<QueryDatabaseResponse["results"][number]>;
+type NotionPageProperties = NonNullable<UpdatePageParameters["properties"]>;
+type NotionProperty = NotionPageProperties["type"];
 
 const CITIES_DATABASE_ID = "c0e8bf94ba874800b6e66af872e32ce8";
 
 const SCHEMA = {
+  "Cities": "title",
   "States": "multi_select",
   "Population": "number",
   "Median House Price": "number",
@@ -26,7 +32,8 @@ const SCHEMA = {
   "Middle Tier Housing Price": "number",
   "Bottom Tier Housing Price": "number",
   "Three Bedroom Housing Price": "number",
-  "Cities": "title"
+  "Winner of 2020 Election": "select",
+  "Winner of 2020 Election Vote Percentage": "number"
 };
 
 // Initializing a client
@@ -41,7 +48,10 @@ function convertKeyToNotionFormat(key: string) {
     .replaceAll(" The", " the");
 }
 
-function convertPropertyToNotionFormat(value: number | string | string[] | null, key: string) {
+function convertPropertyToNotionFormat(
+  value: number | string | string[] | null,
+  key: string
+): NotionProperty {
   if (!(key in SCHEMA)) {
     throw new Error(`The key ${ key } in not in the schema!`);
   }
@@ -64,7 +74,9 @@ function convertPropertyToNotionFormat(value: number | string | string[] | null,
         ]
       };
     case "number":
-      return { number: value };
+      return { number: value as number };
+    case "select":
+      return { select: { name: value as string } };
     case "multi_select":
       // eslint-disable-next-line no-extra-parens
       return { multi_select: (value as string[]).map(option => ({ name: option })) };
@@ -73,12 +85,21 @@ function convertPropertyToNotionFormat(value: number | string | string[] | null,
   }
 }
 
-function metroAreaToNotionProperties(metroArea: MetroArea) {
-  return _.chain(metroArea)
-    .omitBy(value => _.isNil(value))
-    .mapKeys((_value, key) => convertKeyToNotionFormat(key))
-    .mapValues(convertPropertyToNotionFormat)
-    .value();
+function metroAreaToNotionProperties(metroArea: ExtendedMetroArea) {
+  // NOTE: I'm using reduce here because the TypeScript compiler couldn't handle Lodash's omitBy
+  // function.
+  return Object.keys(metroArea).reduce((accumulator, key) => {
+    const value = metroArea[key];
+    const notionKey = convertKeyToNotionFormat(key);
+
+    if (!value) {
+      return accumulator;
+    }
+
+    accumulator[notionKey] = convertPropertyToNotionFormat(value, notionKey);
+
+    return accumulator;
+  }, {});
 }
 
 async function fetchMetroAreasFromNotion() {
@@ -89,7 +110,7 @@ async function fetchMetroAreasFromNotion() {
   return response.results;
 }
 
-async function createMetroAreaInNotion(metroArea: MetroArea) {
+async function createMetroAreaInNotion(metroArea: ExtendedMetroArea) {
   await notion.pages.create({
     parent: {
       database_id: CITIES_DATABASE_ID
@@ -98,7 +119,7 @@ async function createMetroAreaInNotion(metroArea: MetroArea) {
   });
 }
 
-async function updateMetroAreaInNotion(pageId: string, metroArea: MetroArea) {
+async function updateMetroAreaInNotion(pageId: string, metroArea: ExtendedMetroArea) {
   await notion.pages.update({
     page_id: pageId,
     properties: metroAreaToNotionProperties(metroArea)
@@ -107,7 +128,7 @@ async function updateMetroAreaInNotion(pageId: string, metroArea: MetroArea) {
 
 async function createOrUpdateMetroAreaInNotion(
   existingMetroAreaPages: NotionDatabaseQueryResult[],
-  metroArea: MetroArea
+  metroArea: ExtendedMetroArea
 ) {
   const matchingMetroAreaPage = _.find(existingMetroAreaPages, {
     properties: {
@@ -129,7 +150,7 @@ async function createOrUpdateMetroAreaInNotion(
   }
 }
 
-export async function syncMetroAreasToNotion(metroAreas: MetroArea[]) {
+export async function syncMetroAreasToNotion(metroAreas: ExtendedMetroArea[]) {
   const existingMetroAreaPages = await fetchMetroAreasFromNotion();
 
   for (const metroArea of metroAreas) {

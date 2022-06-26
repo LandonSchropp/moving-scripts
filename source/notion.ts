@@ -5,6 +5,7 @@ import {
 } from "@notionhq/client/build/src/api-endpoints";
 import _ from "lodash";
 
+import { metroAreaCitiesToTitle } from "./metro-areas";
 import { ExtendedMetroArea } from "./types";
 
 // Extract the Notion types from the exported type in Notion.
@@ -68,7 +69,7 @@ function convertPropertyToNotionFormat(
             "type": "text",
             "text": {
               // eslint-disable-next-line no-extra-parens
-              "content": (value as string[]).join(" / ")
+              "content": metroAreaCitiesToTitle(value as string[])
             }
           }
         ]
@@ -135,7 +136,7 @@ async function createOrUpdateMetroAreaInNotion(
       "Cities": {
         title: [
           {
-            plain_text: metroArea.cities
+            plain_text: metroAreaCitiesToTitle(metroArea.cities)
           }
         ]
       }

@@ -35,3 +35,7 @@ export function stringMatchesMetroArea(string: string, metroArea: MetroArea) {
         || stringMatchesMetroAreaStateAbbreviation(string, metroArea)
     );
 }
+
+export function metroAreaCitiesToTitle(cities: string[]) {
+  return cities.join(" / ");
+}

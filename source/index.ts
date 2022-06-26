@@ -1,7 +1,23 @@
 import { fetchMetroAreas } from "./cities";
 import { syncMetroAreasToNotion } from "./notion";
+import { MetroArea } from "./types";
+import { getMetroAreaHousingPrices } from "./zillow";
+
+async function extendMetroArea(metroArea: MetroArea) {
+  return {
+    ...metroArea,
+    ...await getMetroAreaHousingPrices(metroArea)
+  };
+}
 
 (async () => {
   const metroAreas = await fetchMetroAreas();
-  await syncMetroAreasToNotion(metroAreas);
+
+  const extendMetroAreas = [] as MetroArea[];
+
+  for (const metroArea of metroAreas) {
+    extendMetroAreas.push(await extendMetroArea(metroArea));
+  }
+
+  await syncMetroAreasToNotion(extendMetroAreas);
 })();

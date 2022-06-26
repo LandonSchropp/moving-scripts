@@ -1,6 +1,6 @@
-import { fetchMetroAreas } from "./cities";
 import { syncMetroAreasToNotion } from "./notion";
 import { MetroArea } from "./types";
+import { fetchMetroAreas } from "./wikipedia";
 import { getMetroAreaHousingPrices } from "./zillow";
 
 async function extendMetroArea(metroArea: MetroArea) {

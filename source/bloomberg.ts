@@ -24,8 +24,8 @@ export async function fetchPoliticalDataForMetroArea(
   return _.chain(await fetchPoliticalData())
     .find(row => stringMatchesMetroArea(row[1], metroArea))
     .thru(row => ({
-      winnerOf2020Election: row[2],
-      winnerOf2020ElectionVotePercentage: parseFloat(row[3]) / 100
+      winnerOf2020Election: row?.[2] || null,
+      winnerOf2020ElectionVotePercentage: parseFloat(row?.[3]) / 100
     }))
     .value();
 }

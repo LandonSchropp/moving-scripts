@@ -1,3 +1,12 @@
+// https://dev.to/ankittanna/how-to-create-a-type-for-complex-json-object-in-typescript-d81
+export type JSONValue =
+  | null
+  | string
+  | number
+  | boolean
+  | { [x: string]: JSONValue }
+  | Array<JSONValue>;
+
 export type MetroAreaHousingPrices = {
   topTierHousingPrice: number | null,
   middleTierHousingPrice: number | null,

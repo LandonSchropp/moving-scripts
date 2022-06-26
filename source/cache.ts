@@ -1,48 +1,52 @@
-import { mkdirp, pathExists, readFile, readJson, writeFile, writeJson } from "fs-extra";
+import { mkdirp, pathExists, readFile, writeFile } from "fs-extra";
 import fetch from "node-fetch";
+
+import { JSONValue } from "./types";
 
 const CACHE_DIRECTORY = `${ __dirname }/../cache`;
 
-export function cache<Type>(
-  key: string,
-  func: (...parameters: (string | string[])[]) => Promise<Type>
-) {
-  return async (...parameters: (string | string[])[]) => {
-    const cacheKey = [ key, ...parameters ]
-      .map(value => value.toString())
-      .join("-")
-      .replaceAll(/\W/g, "%");
-
-    const cachePath = `${ CACHE_DIRECTORY }/${ cacheKey }.json`;
-
-    if (await pathExists(cachePath)) {
-      return await readJson(cachePath);
-    }
-
-    const result = await func(...parameters);
-
-    await mkdirp(CACHE_DIRECTORY);
-    await writeJson(cachePath, result, { spaces: 2 });
-
-    return result;
-  };
-}
-
-async function downloadFile(url: string) {
+/**
+ * Downloads the contents of a URL.
+ */
+export async function download(url: string) {
   return await (await fetch(url)).text();
 }
 
-export async function downloadFileUnlessExists(fileName: string, url: string) {
+/**
+ * If a cache file does not exist, calls the function and writes the results to a file. If the
+ * cache file already exists, returns the contents of the file.
+ */
+export async function cache(fileName: string, func: () => Promise<string>) {
   const cachePath = `${ CACHE_DIRECTORY }/${ fileName }`;
 
   if (await pathExists(cachePath)) {
-    return await readFile(cachePath);
+    return (await readFile(cachePath)).toString();
   }
 
-  const result = await downloadFile(url);
+  const result = await func();
 
   await mkdirp(CACHE_DIRECTORY);
   await writeFile(cachePath, result);
 
   return result;
+}
+
+/**
+ * Caches the result of the given function as JSON.
+ */
+export async function cacheJSON(fileName: string, func: () => Promise<JSONValue>) {
+  const result = await cache(fileName, async () => {
+    return JSON.stringify(await func(), null, 2);
+  });
+
+  return JSON.parse(result);
+}
+
+/**
+ * Downloads the contents of a URL, caching the result.
+ */
+export async function cacheDownload(fileName: string, url: string) {
+  return await cache(fileName, async () => {
+    return await download(url);
+  });
 }

@@ -1,8 +1,8 @@
 import { parse } from "csv-parse/sync";
 import _ from "lodash";
 
-import { cache, downloadFileUnlessExists } from "./cache";
-import { MetroAreaHousingPrices } from "./types";
+import { cacheDownload, cacheJSON } from "./cache";
+import { MetroArea, MetroAreaHousingPrices } from "./types";
 
 const BASE_URL = "https://files.zillowstatic.com/research/public_csvs/zhvi";
 
@@ -14,20 +14,19 @@ const THREE_BEDROOM_URL = `${ BASE_URL }/Metro_zhvi_bdrmcnt_3_uc_sfrcondo_tier_0
 
 async function downloadData(fileName: string, url: string) {
   const timestamp = Math.floor(new Date().getTime() / 1000);
+  const extendedUrl = `${ url }?t=${ timestamp }`;
 
-  const result = await downloadFileUnlessExists(
-    fileName,
-    `${ url }?t=${ timestamp }`
-  );
+  const result = await cacheDownload(fileName, extendedUrl);
 
   return parse(result, { columns: true });
 }
 
-async function latestPriceForMetroArea(fileName: string, url: string, cities: string[]) {
+async function latestPriceForMetroArea(fileName: string, url: string, metroArea: MetroArea) {
   const data = await downloadData(fileName, url);
 
+  // TODO: This should also match based on *state*
   const match = data.find((region : { RegionName: string }) => {
-    return _.some(cities, city => {
+    return _.some(metroArea.cities, city => {
       return region.RegionName.includes(city);
     });
   })as Record<string, string>;
@@ -40,21 +39,21 @@ async function latestPriceForMetroArea(fileName: string, url: string, cities: st
   return key ? parseInt(match[key], 10) : null;
 }
 
-const getMetroAreaHousingPricesUncached = async (cities: string[]) => {
-  const topTier = await latestPriceForMetroArea("top-tier.csv", TOP_TIER_URL, cities);
-  const midTier = await latestPriceForMetroArea("mid-tier.csv", MID_TIER_URL, cities);
-  const bottomTier = await latestPriceForMetroArea("bottom-tier.csv", BOTTOM_TIER_URL, cities);
-  const threeBedroom = await latestPriceForMetroArea("three.csv", THREE_BEDROOM_URL, cities);
+export async function getMetroAreaHousingPrices(metroArea: MetroArea) {
+  const metroAreaName = metroArea.cities.join("-").toLowerCase().replaceAll(/\W/g, "-");
+  const fileName = `${ metroAreaName }-latest-housing-prices.json`;
 
-  return {
-    topTierHousingPrice: topTier,
-    middleTierHousingPrice: midTier,
-    bottomTierHousingPrice: bottomTier,
-    threeBedroomHousingPrice: threeBedroom
-  };
-};
+  return await cacheJSON(fileName, async () => {
+    const topTier = await latestPriceForMetroArea("top-tier.csv", TOP_TIER_URL, metroArea);
+    const midTier = await latestPriceForMetroArea("mid-tier.csv", MID_TIER_URL, metroArea);
+    const bottomTier = await latestPriceForMetroArea("bottom-tier.csv", BOTTOM_TIER_URL, metroArea);
+    const threeBedroom = await latestPriceForMetroArea("three.csv", THREE_BEDROOM_URL, metroArea);
 
-export const getMetroAreaHousingPrices = cache<MetroAreaHousingPrices>(
-  "metro-area-housing-prices",
-  getMetroAreaHousingPricesUncached
-);
+    return {
+      topTierHousingPrice: topTier,
+      middleTierHousingPrice: midTier,
+      bottomTierHousingPrice: bottomTier,
+      threeBedroomHousingPrice: threeBedroom
+    };
+  }) as MetroAreaHousingPrices;
+}

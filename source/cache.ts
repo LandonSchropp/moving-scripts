@@ -3,11 +3,15 @@ import fetch from "node-fetch";
 
 const CACHE_DIRECTORY = `${ __dirname }/../cache`;
 
-export function cache<Type>(key: string, func: (...parameters: string[]) => Promise<Type>) {
-  return async (...parameters: string[]) => {
+export function cache<Type>(
+  key: string,
+  func: (...parameters: (string | string[])[]) => Promise<Type>
+) {
+  return async (...parameters: (string | string[])[]) => {
     const cacheKey = [ key, ...parameters ]
-      .map(value => value.replaceAll(/\W/g, "%"))
-      .join("-");
+      .map(value => value.toString())
+      .join("-")
+      .replaceAll(/\W/g, "%");
 
     const cachePath = `${ CACHE_DIRECTORY }/${ cacheKey }.json`;
 

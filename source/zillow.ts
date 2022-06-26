@@ -1,8 +1,8 @@
 import { parse } from "csv-parse/sync";
 import _ from "lodash";
 
-import { downloadFileUnlessExists } from "./cache";
-import { MetroArea } from "./types";
+import { cache, downloadFileUnlessExists } from "./cache";
+import { MetroAreaHousingPrices } from "./types";
 
 const BASE_URL = "https://files.zillowstatic.com/research/public_csvs/zhvi";
 
@@ -23,11 +23,11 @@ async function downloadData(fileName: string, url: string) {
   return parse(result, { columns: true });
 }
 
-async function latestPriceForMetroArea(fileName: string, url: string, metroArea: MetroArea) {
+async function latestPriceForMetroArea(fileName: string, url: string, cities: string[]) {
   const data = await downloadData(fileName, url);
 
   const match = data.find((region : { RegionName: string }) => {
-    return _.some(metroArea.cities, city => {
+    return _.some(cities, city => {
       return region.RegionName.includes(city);
     });
   })as Record<string, string>;
@@ -40,11 +40,11 @@ async function latestPriceForMetroArea(fileName: string, url: string, metroArea:
   return key ? parseInt(match[key], 10) : null;
 }
 
-export async function getMetroAreaHousingPrices(metroArea: MetroArea) {
-  const topTier = await latestPriceForMetroArea("top-tier.csv", TOP_TIER_URL, metroArea);
-  const midTier = await latestPriceForMetroArea("mid-tier.csv", MID_TIER_URL, metroArea);
-  const bottomTier = await latestPriceForMetroArea("bottom-tier.csv", BOTTOM_TIER_URL, metroArea);
-  const threeBedroom = await latestPriceForMetroArea("three.csv", THREE_BEDROOM_URL, metroArea);
+const getMetroAreaHousingPricesUncached = async (cities: string[]) => {
+  const topTier = await latestPriceForMetroArea("top-tier.csv", TOP_TIER_URL, cities);
+  const midTier = await latestPriceForMetroArea("mid-tier.csv", MID_TIER_URL, cities);
+  const bottomTier = await latestPriceForMetroArea("bottom-tier.csv", BOTTOM_TIER_URL, cities);
+  const threeBedroom = await latestPriceForMetroArea("three.csv", THREE_BEDROOM_URL, cities);
 
   return {
     topTierHousingPrice: topTier,
@@ -52,4 +52,9 @@ export async function getMetroAreaHousingPrices(metroArea: MetroArea) {
     bottomTierHousingPrice: bottomTier,
     threeBedroomHousingPrice: threeBedroom
   };
-}
+};
+
+export const getMetroAreaHousingPrices = cache<MetroAreaHousingPrices>(
+  "metro-area-housing-prices",
+  getMetroAreaHousingPricesUncached
+);

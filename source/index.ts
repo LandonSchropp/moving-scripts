@@ -6,7 +6,7 @@ import { getMetroAreaHousingPrices } from "./zillow";
 async function extendMetroArea(metroArea: MetroArea) {
   return {
     ...metroArea,
-    ...await getMetroAreaHousingPrices(metroArea)
+    ...await getMetroAreaHousingPrices(metroArea.cities)
   };
 }
 

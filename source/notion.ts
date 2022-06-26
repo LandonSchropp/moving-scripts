@@ -22,6 +22,10 @@ const SCHEMA = {
   "Number of Sunny Days": "number",
   "Cost of Living Index": "number",
   "School Rating Index": "number",
+  "Top Tier Housing Price": "number",
+  "Mid Tier Housing Price": "number",
+  "Bottom Tier Housing Price": "number",
+  "Three Bedroom Housing Price": "number",
   "Cities": "title"
 };
 

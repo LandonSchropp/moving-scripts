@@ -2,7 +2,7 @@ import { fetchPoliticalDataForMetroArea } from "./bloomberg";
 import { metroAreaCitiesToTitle, metroAreaTitle } from "./metro-areas";
 import { syncMetroAreasToNotion } from "./notion";
 import { ExtendedMetroArea, MetroArea } from "./types";
-import { fetchMetroAreas } from "./wikipedia";
+import { fetchMetroAreas, fetchStatePoliticalData } from "./wikipedia";
 import { getMetroAreaHousingPrices } from "./zillow";
 
 async function extendMetroArea(metroArea: MetroArea) : Promise<ExtendedMetroArea> {
@@ -14,6 +14,10 @@ async function extendMetroArea(metroArea: MetroArea) : Promise<ExtendedMetroArea
 }
 
 (async () => {
+  // This data isn't used in any of the calculations, but it's still helpful for colorizing the
+  // states.
+  await fetchStatePoliticalData();
+
   const metroAreas = await fetchMetroAreas();
   const extendMetroAreas = [] as ExtendedMetroArea[];
 

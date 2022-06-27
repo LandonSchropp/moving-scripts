@@ -163,5 +163,4 @@ export async function syncMetroAreasToNotion(metroAreas: ExtendedMetroArea[]) {
 
     await createOrUpdateMetroAreaInNotion(existingMetroAreaPages, metroArea);
   }
-
 }

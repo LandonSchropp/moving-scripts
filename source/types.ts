@@ -11,8 +11,6 @@ export interface MetroArea {
   cities: string[],
   states: string[],
   population: number
-  numberOfSunnyDays?: number,
-  schoolRatingIndex?: number,
 }
 
 export interface MetroAreaHousingPrices {
@@ -28,11 +26,15 @@ export interface MetroAreaPolitics {
 }
 
 export interface MetroAreaClimate {
-  januaryAverageHighTemperature: number,
-  julyAverageHighTemperature: number,
+  summerHighTemperature: number,
+  winterLowTemperature: number,
+  rainfall: number,
+  snowfall: number,
   numberOfDaysWithPrecipitation: number,
-  averageAnnualPrecipitation: number,
-  annualHoursOfSunshine: number
+  numberOfSunnyDays: number,
+  comfortIndex: number,
+  summerComfortIndex: number,
+  winterComfortIndex: number
 }
 
 export interface ExtendedMetroArea extends

@@ -1,8 +1,8 @@
+import { fetchMetroAreaClimate } from "./best-places";
 import { fetchPoliticalDataForMetroArea } from "./bloomberg";
-import { metroAreaCitiesToTitle, metroAreaTitle } from "./metro-areas";
+import { metroAreaTitle } from "./metro-areas";
 import { syncMetroAreasToNotion } from "./notion";
 import { ExtendedMetroArea, MetroArea } from "./types";
-import { fetchMetroAreaClimate } from "./us-climate-data";
 import { fetchMetroAreas, fetchStatePoliticalData } from "./wikipedia";
 import { getMetroAreaHousingPrices } from "./zillow";
 
@@ -22,7 +22,6 @@ async function extendMetroArea(metroArea: MetroArea) : Promise<ExtendedMetroArea
 
   const metroAreas = await fetchMetroAreas();
 
-  await fetchMetroAreaClimate(metroAreas[0]);
   const extendedMetroAreas = [] as ExtendedMetroArea[];
 
   for (let i = 0; i < metroAreas.length; i++) {

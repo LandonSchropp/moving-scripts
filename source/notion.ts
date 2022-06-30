@@ -25,21 +25,27 @@ const SCHEMA = {
   "Cities": "title",
   "States": "multi_select",
   "Population": "number",
-  "Median House Price": "number",
-  "Number of Sunny Days": "number",
-  "Cost of Living Index": "number",
-  "School Rating Index": "number",
+
+  // Housing
   "Top Tier Housing Price": "number",
   "Middle Tier Housing Price": "number",
   "Bottom Tier Housing Price": "number",
   "Three Bedroom Housing Price": "number",
+
+  // Politics
   "Winner of 2020 Election": "select",
   "Winner of 2020 Election Vote Percentage": "number",
-  "January Average High Temperature": "number",
-  "July Average High Temperature": "number",
+
+  // Weather
+  "Summer High Temperature": "number",
+  "Winter Low Temperature": "number",
+  "Rainfall": "number",
+  "Snowfall": "number",
   "Number of Days With Precipitation": "number",
-  "Average Annual Precipitation": "number",
-  "Annual Hours of Sunshine": "number"
+  "Number of Sunny Days": "number",
+  "Comfort Index": "number",
+  "Summer Comfort Index": "number",
+  "Winter Comfort Index": "number"
 };
 
 // Initializing a client

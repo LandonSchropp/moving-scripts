@@ -1,5 +1,4 @@
-import { tail } from "lodash";
-import _ from "lodash";
+import _, { tail } from "lodash";
 import scrapeIt from "scrape-it";
 
 import { cacheJSON } from "./cache";
@@ -26,7 +25,9 @@ export async function fetchMetroAreas() {
         data: {
           cities: {
             selector: "td:nth-of-type(2)",
-            convert: value => value.match(METRO_AREA_REGEX)?.[1].split(/[–\-/]/g)
+            convert: value => {
+              return value.match(METRO_AREA_REGEX)?.[1].replaceAll("Urban ", "").split(/[–\-/]/g);
+            }
           },
           states: {
             selector: "td:nth-of-type(2)",

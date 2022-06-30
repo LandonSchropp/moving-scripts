@@ -27,4 +27,16 @@ export interface MetroAreaPolitics {
   winnerOf2020ElectionVotePercentage: number | null
 }
 
-export interface ExtendedMetroArea extends MetroArea, MetroAreaHousingPrices, MetroAreaPolitics {}
+export interface MetroAreaClimate {
+  januaryAverageHighTemperature: number,
+  julyAverageHighTemperature: number,
+  numberOfDaysWithPrecipitation: number,
+  averageAnnualPrecipitation: number,
+  annualHoursOfSunshine: number
+}
+
+export interface ExtendedMetroArea extends
+  MetroArea,
+  MetroAreaHousingPrices,
+  MetroAreaPolitics,
+  MetroAreaClimate {}

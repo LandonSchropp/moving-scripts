@@ -5,6 +5,7 @@ import scrapeIt from "scrape-it";
 import { cacheJSON } from "./cache";
 import { stateAbbreviationToName } from "./metro-areas";
 import { JSONValue, MetroArea } from "./types";
+import { parseNumber } from "./utilities";
 
 const METRO_AREAS_URL = "https://en.wikipedia.org/wiki/Metropolitan_statistical_area";
 const STATE_POLITICS_URL = "https://en.wikipedia.org/wiki/Political_party_strength_in_U.S._states";
@@ -16,10 +17,6 @@ const REPUBLICAN_REGEX = /Republican(?<republicanPercent>\d+)[-–](?<democratPe
 const SPLIT_REGEX = /Even(?<democratPercent>\d+)[-–](?<republicanPercent>\d+)/;
 
 const MODERATE_PERCENTAGE = 0.08;
-
-function parseNumber(value: string) {
-  return parseInt(value.replaceAll(",", ""), 10);
-}
 
 export async function fetchMetroAreas() {
   return await cacheJSON("metro-areas.json", async () => {

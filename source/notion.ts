@@ -34,7 +34,12 @@ const SCHEMA = {
   "Bottom Tier Housing Price": "number",
   "Three Bedroom Housing Price": "number",
   "Winner of 2020 Election": "select",
-  "Winner of 2020 Election Vote Percentage": "number"
+  "Winner of 2020 Election Vote Percentage": "number",
+  "January Average High Temperature": "number",
+  "July Average High Temperature": "number",
+  "Number of Days With Precipitation": "number",
+  "Average Annual Precipitation": "number",
+  "Annual Hours of Sunshine": "number"
 };
 
 // Initializing a client

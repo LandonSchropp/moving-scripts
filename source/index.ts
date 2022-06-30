@@ -2,6 +2,7 @@ import { fetchPoliticalDataForMetroArea } from "./bloomberg";
 import { metroAreaCitiesToTitle, metroAreaTitle } from "./metro-areas";
 import { syncMetroAreasToNotion } from "./notion";
 import { ExtendedMetroArea, MetroArea } from "./types";
+import { fetchMetroAreaClimate } from "./us-climate-data";
 import { fetchMetroAreas, fetchStatePoliticalData } from "./wikipedia";
 import { getMetroAreaHousingPrices } from "./zillow";
 
@@ -9,7 +10,8 @@ async function extendMetroArea(metroArea: MetroArea) : Promise<ExtendedMetroArea
   return {
     ...metroArea,
     ...await getMetroAreaHousingPrices(metroArea),
-    ...await fetchPoliticalDataForMetroArea(metroArea)
+    ...await fetchPoliticalDataForMetroArea(metroArea),
+    ...await fetchMetroAreaClimate(metroArea)
   };
 }
 
@@ -19,7 +21,9 @@ async function extendMetroArea(metroArea: MetroArea) : Promise<ExtendedMetroArea
   await fetchStatePoliticalData();
 
   const metroAreas = await fetchMetroAreas();
-  const extendMetroAreas = [] as ExtendedMetroArea[];
+
+  await fetchMetroAreaClimate(metroAreas[0]);
+  const extendedMetroAreas = [] as ExtendedMetroArea[];
 
   for (let i = 0; i < metroAreas.length; i++) {
 
@@ -28,8 +32,8 @@ async function extendMetroArea(metroArea: MetroArea) : Promise<ExtendedMetroArea
 
     // eslint-disable-next-line no-console
     console.log(`🧠 ${ progress }: Fetching data for metro area ${ metroAreaTitle(metroArea) }`);
-    extendMetroAreas.push(await extendMetroArea(metroArea));
+    extendedMetroAreas.push(await extendMetroArea(metroArea));
   }
 
-  await syncMetroAreasToNotion(extendMetroAreas);
+  await syncMetroAreasToNotion(extendedMetroAreas);
 })();

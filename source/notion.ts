@@ -115,11 +115,22 @@ function metroAreaToNotionProperties(metroArea: ExtendedMetroArea) {
 }
 
 async function fetchMetroAreasFromNotion() {
-  const response = await notion.databases.query({
+  let response = await notion.databases.query({
     database_id: CITIES_DATABASE_ID
   });
 
-  return response.results;
+  let pages = response.results;
+
+  while (response.next_cursor) {
+    response = await notion.databases.query({
+      database_id: CITIES_DATABASE_ID,
+      start_cursor: response.next_cursor
+    });
+
+    pages = [ ...pages, ...response.results ];
+  }
+
+  return pages;
 }
 
 async function createMetroAreaInNotion(metroArea: ExtendedMetroArea) {
@@ -138,21 +149,30 @@ async function updateMetroAreaInNotion(pageId: string, metroArea: ExtendedMetroA
   });
 }
 
-async function createOrUpdateMetroAreaInNotion(
-  existingMetroAreaPages: NotionDatabaseQueryResult[],
-  metroArea: ExtendedMetroArea
+function findMatchingMetroAreaForNotionPage(
+  metroAreaPages: NotionDatabaseQueryResult[],
+  metroArea: ExtendedMetroArea,
 ) {
-  const matchingMetroAreaPage = _.find(existingMetroAreaPages, {
+
+  // HACK: Even though it's technically possible for two cities to have the same population,
+  // practically it won't happen, so I'm using that as my key.
+  return _.find(metroAreaPages, {
     properties: {
-      "Cities": {
-        title: [
-          {
-            plain_text: metroAreaCitiesToTitle(metroArea.cities)
-          }
-        ]
+      Population: {
+        number: metroArea.population
       }
     }
   });
+}
+
+async function createOrUpdateMetroAreaInNotion(
+  existingMetroAreaPages: NotionDatabaseQueryResult[],
+  metroArea: ExtendedMetroArea,
+) {
+  const matchingMetroAreaPage = findMatchingMetroAreaForNotionPage(
+    existingMetroAreaPages,
+    metroArea
+  );
 
   if (matchingMetroAreaPage) {
     await updateMetroAreaInNotion(matchingMetroAreaPage.id, metroArea);

@@ -42,3 +42,9 @@ export interface ExtendedMetroArea extends
   MetroAreaHousingPrices,
   MetroAreaPolitics,
   MetroAreaClimate {}
+
+export interface Neighborhood {
+  name: string
+}
+
+export type ExtendedNeighborhood = Neighborhood

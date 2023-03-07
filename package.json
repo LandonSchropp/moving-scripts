@@ -23,7 +23,8 @@
   },
   "scripts": {
     "lint": "eslint --max-warnings=0 .",
-    "sync-metro-areas": "ts-node source/index.ts"
+    "sync-metro-areas": "ts-node source/sync-metro-areas.ts",
+    "sync-neighborhoods": "ts-node source/sync-neighborhoods.ts"
   },
   "devDependencies": {
     "@landonschropp/eslint-config": "0.11.1",

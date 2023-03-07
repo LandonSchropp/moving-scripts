@@ -3,10 +3,9 @@ import {
   QueryDatabaseResponse,
   UpdatePageParameters
 } from "@notionhq/client/build/src/api-endpoints";
-import _ from "lodash";
+import _, { isArray } from "lodash";
 
-import { metroAreaCitiesToTitle, metroAreaTitle } from "./metro-areas";
-import { ExtendedMetroArea } from "./types";
+import { metroAreaCitiesToTitle } from "./metro-areas";
 
 // Extract the Notion types from the exported type in Notion.
 // https://github.com/makenotion/notion-sdk-js/issues/280#issuecomment-1099798305
@@ -19,34 +18,11 @@ type NotionDatabaseQueryResult = Widen<QueryDatabaseResponse["results"][number]>
 type NotionPageProperties = NonNullable<UpdatePageParameters["properties"]>;
 type NotionProperty = NotionPageProperties["type"];
 
-const CITIES_DATABASE_ID = "c0e8bf94ba874800b6e66af872e32ce8";
+type SchemaValue = "multi_select" | "number" | "select" | "title";
+type Schema = { [key: string]: SchemaValue }
 
-const SCHEMA = {
-  "Cities": "title",
-  "States": "multi_select",
-  "Population": "number",
-
-  // Housing
-  "Top Tier Housing Price": "number",
-  "Middle Tier Housing Price": "number",
-  "Bottom Tier Housing Price": "number",
-  "Three Bedroom Housing Price": "number",
-
-  // Politics
-  "Winner of 2020 Election": "select",
-  "Winner of 2020 Election Vote Percentage": "number",
-
-  // Weather
-  "Summer High Temperature": "number",
-  "Winter Low Temperature": "number",
-  "Rainfall": "number",
-  "Snowfall": "number",
-  "Number of Days With Precipitation": "number",
-  "Number of Sunny Days": "number",
-  "Comfort Index": "number",
-  "Summer Comfort Index": "number",
-  "Winter Comfort Index": "number"
-};
+type SerializableValue = number | string | string[] | null;
+type SerializableObject<SchemaType> = { [Property in keyof SchemaType]: SerializableValue };
 
 // Initializing a client
 const notion = new Client({
@@ -61,14 +37,15 @@ function convertKeyToNotionFormat(key: string) {
 }
 
 function convertPropertyToNotionFormat(
-  value: number | string | string[] | null,
-  key: string
+  value: SerializableValue,
+  key: string,
+  schema: Schema
 ): NotionProperty {
-  if (!(key in SCHEMA)) {
+  if (!(key in schema)) {
     throw new Error(`The key ${ key } in not in the schema!`);
   }
 
-  const type = SCHEMA[key];
+  const type = schema[key];
 
   // The required values for the properties can be found here:
   // https://developers.notion.com/reference/property-value-object#title-property-values
@@ -80,7 +57,11 @@ function convertPropertyToNotionFormat(
             "type": "text",
             "text": {
               // eslint-disable-next-line no-extra-parens
-              "content": metroAreaCitiesToTitle(value as string[])
+              // FIX: This should be replaced by a more nuanced implementation. However, this is a
+              // quick fix to get this working for now.
+              "content": isArray(value)
+                ? metroAreaCitiesToTitle(value as string[])
+                : `${ value }`
             }
           }
         ]
@@ -97,33 +78,34 @@ function convertPropertyToNotionFormat(
   }
 }
 
-function metroAreaToNotionProperties(metroArea: ExtendedMetroArea) {
+export function objectToNotionProperties<T extends Schema>(
+  object: SerializableObject<T>,
+  schema: T
+) {
   // NOTE: I'm using reduce here because the TypeScript compiler couldn't handle Lodash's omitBy
   // function.
-  return Object.keys(metroArea).reduce((accumulator, key) => {
-    const value = metroArea[key];
+  return Object.keys(object).reduce((accumulator, key) => {
+    const value = object[key];
     const notionKey = convertKeyToNotionFormat(key);
 
     if (!value) {
       return accumulator;
     }
 
-    accumulator[notionKey] = convertPropertyToNotionFormat(value, notionKey);
+    accumulator[notionKey] = convertPropertyToNotionFormat(value, key, schema);
 
     return accumulator;
   }, {});
 }
 
-async function fetchMetroAreasFromNotion() {
-  let response = await notion.databases.query({
-    database_id: CITIES_DATABASE_ID
-  });
+export async function fetchPagesFromNotionDatabase(databaseId: string) {
+  let response = await notion.databases.query({ database_id: databaseId });
 
   let pages = response.results;
 
   while (response.next_cursor) {
     response = await notion.databases.query({
-      database_id: CITIES_DATABASE_ID,
+      database_id: databaseId,
       start_cursor: response.next_cursor
     });
 
@@ -133,65 +115,87 @@ async function fetchMetroAreasFromNotion() {
   return pages;
 }
 
-async function createMetroAreaInNotion(metroArea: ExtendedMetroArea) {
+async function createPageInNotion<T extends Schema>(
+  object: SerializableObject<T>,
+  databaseId: string,
+  schema: T
+) {
   await notion.pages.create({
     parent: {
-      database_id: CITIES_DATABASE_ID
+      database_id: databaseId
     },
-    properties: metroAreaToNotionProperties(metroArea)
+    properties: objectToNotionProperties(object, schema)
   });
 }
 
-async function updateMetroAreaInNotion(pageId: string, metroArea: ExtendedMetroArea) {
+async function updatePageInNotion<T extends Schema>(
+  pageId: string,
+  object: SerializableObject<T>,
+  schema: T
+) {
   await notion.pages.update({
     page_id: pageId,
-    properties: metroAreaToNotionProperties(metroArea)
+    properties: objectToNotionProperties(object, schema)
   });
 }
 
-function findMatchingMetroAreaForNotionPage(
-  metroAreaPages: NotionDatabaseQueryResult[],
-  metroArea: ExtendedMetroArea,
+function findMatchingNotionPage<T extends Schema>(
+  existingPages: NotionDatabaseQueryResult[],
+  object: SerializableObject<T>,
+  schema: T,
+  matchKey: keyof object
 ) {
-
-  // HACK: Even though it's technically possible for two cities to have the same population,
-  // practically it won't happen, so I'm using that as my key.
-  return _.find(metroAreaPages, {
-    properties: {
-      Population: {
-        number: metroArea.population
-      }
-    }
-  });
+  const objectSubset = { [matchKey]: object[matchKey] };
+  const schemaSubset = { [matchKey]: schema[matchKey] };
+  const properties = objectToNotionProperties(objectSubset, schemaSubset);
+  return _.find(existingPages, { properties });
 }
 
-async function createOrUpdateMetroAreaInNotion(
-  existingMetroAreaPages: NotionDatabaseQueryResult[],
-  metroArea: ExtendedMetroArea,
+async function createOrUpdatePageInNotion<T extends Schema>(
+  existingPages: NotionDatabaseQueryResult[],
+  object: SerializableObject<T>,
+  databaseId: string,
+  schema: T,
+  matchKey: keyof object
 ) {
-  const matchingMetroAreaPage = findMatchingMetroAreaForNotionPage(
-    existingMetroAreaPages,
-    metroArea
+  const matchingPage = findMatchingNotionPage(
+    existingPages,
+    object,
+    schema,
+    matchKey
   );
 
-  if (matchingMetroAreaPage) {
-    await updateMetroAreaInNotion(matchingMetroAreaPage.id, metroArea);
+  if (matchingPage) {
+    await updatePageInNotion(matchingPage.id, object, schema);
   }
   else {
-    await createMetroAreaInNotion(metroArea);
+    await createPageInNotion(object, databaseId, schema);
   }
 }
 
-export async function syncMetroAreasToNotion(metroAreas: ExtendedMetroArea[]) {
-  const existingMetroAreaPages = await fetchMetroAreasFromNotion();
+export async function syncObjectsToNotion<T extends Schema>(
+  objects: SerializableObject<T>[],
+  databaseId: string,
+  schema: T,
+  titleKey: keyof T,
+  matchKey: keyof T
+) {
+  const existingMetroAreaPages = await fetchPagesFromNotionDatabase(databaseId);
 
-  for (let i = 0; i < metroAreas.length; i++) {
-    const metroArea = metroAreas[i];
-    const progress = `${ i + 1 } / ${ metroAreas.length }`;
+  for (let i = 0; i < objects.length; i++) {
+    const object = objects[i];
+    const progress = `${ i + 1 } / ${ objects.length }`;
 
     // eslint-disable-next-line no-console
-    console.log(`☁️  ${ progress }: Syncing metro area ${ metroAreaTitle(metroArea) } to Notion`);
+    console.log(`☁️  ${ progress }: Syncing object ${ object[titleKey] } to Notion`);
 
-    await createOrUpdateMetroAreaInNotion(existingMetroAreaPages, metroArea);
+    await createOrUpdatePageInNotion(
+      existingMetroAreaPages,
+      object,
+      databaseId,
+      schema,
+      // HACK: I couldn't figure out how to get the type set correctly for this.
+      matchKey as keyof object
+    );
   }
 }

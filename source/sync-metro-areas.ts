@@ -1,7 +1,7 @@
 import { fetchMetroAreaClimate } from "./best-places";
 import { fetchPoliticalDataForMetroArea } from "./bloomberg";
 import { metroAreaTitle } from "./metro-areas";
-import { syncMetroAreasToNotion } from "./notion";
+import { syncMetroAreasToNotion } from "./notion-metro-areas";
 import { ExtendedMetroArea, MetroArea } from "./types";
 import { fetchMetroAreas, fetchStatePoliticalData } from "./wikipedia";
 import { getMetroAreaHousingPrices } from "./zillow";

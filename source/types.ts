@@ -48,4 +48,12 @@ export interface Neighborhood {
   quadrant: string
 }
 
-export type ExtendedNeighborhood = Neighborhood
+export interface NeighborhoodWalkScore {
+  walkScore: number,
+  transitScore: number,
+  bikeScore: number
+}
+
+export interface ExtendedNeighborhood extends
+  Neighborhood,
+  NeighborhoodWalkScore {}

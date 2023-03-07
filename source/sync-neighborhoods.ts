@@ -1,3 +1,4 @@
+import { fetchPortlandNeighborhoods } from "./great-vancouver-homes";
 import { ExtendedNeighborhood, Neighborhood } from "./types";
 
 async function extendNeighborhood(neighborhood: Neighborhood) : Promise<ExtendedNeighborhood> {
@@ -7,7 +8,7 @@ async function extendNeighborhood(neighborhood: Neighborhood) : Promise<Extended
 }
 
 (async () => {
-  const neighborhoods = [] as Neighborhood[];
+  const neighborhoods = await fetchPortlandNeighborhoods();
   const extendedMetroAreas = [] as ExtendedNeighborhood[];
 
   for (let i = 0; i < neighborhoods.length; i++) {
@@ -15,7 +16,7 @@ async function extendNeighborhood(neighborhood: Neighborhood) : Promise<Extended
     const progress = `${ i + 1 } / ${ neighborhoods.length }`;
 
     // eslint-disable-next-line no-console
-    console.log(`🧠 ${ progress }: Fetching data for neighborhood ${ neighborhood.name }`);
+    console.log(`🧠 ${ progress }: Fetching data for neighborhood ${ neighborhood.neighborhood }`);
     extendedMetroAreas.push(await extendNeighborhood(neighborhood));
   }
 })();

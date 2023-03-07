@@ -44,7 +44,8 @@ export interface ExtendedMetroArea extends
   MetroAreaClimate {}
 
 export interface Neighborhood {
-  name: string
+  neighborhood: string,
+  quadrant: string
 }
 
 export type ExtendedNeighborhood = Neighborhood

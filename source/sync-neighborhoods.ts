@@ -1,4 +1,5 @@
 import { fetchPortlandNeighborhoods } from "./great-vancouver-homes";
+import { syncNeighborhoodsToNotion } from "./notion-neighborhoods";
 import { ExtendedNeighborhood, Neighborhood } from "./types";
 
 async function extendNeighborhood(neighborhood: Neighborhood) : Promise<ExtendedNeighborhood> {
@@ -9,7 +10,7 @@ async function extendNeighborhood(neighborhood: Neighborhood) : Promise<Extended
 
 (async () => {
   const neighborhoods = await fetchPortlandNeighborhoods();
-  const extendedMetroAreas = [] as ExtendedNeighborhood[];
+  const extendedNeighborhoods = [] as ExtendedNeighborhood[];
 
   for (let i = 0; i < neighborhoods.length; i++) {
     const neighborhood = neighborhoods[i];
@@ -17,6 +18,8 @@ async function extendNeighborhood(neighborhood: Neighborhood) : Promise<Extended
 
     // eslint-disable-next-line no-console
     console.log(`🧠 ${ progress }: Fetching data for neighborhood ${ neighborhood.neighborhood }`);
-    extendedMetroAreas.push(await extendNeighborhood(neighborhood));
+    extendedNeighborhoods.push(await extendNeighborhood(neighborhood));
   }
+
+  await syncNeighborhoodsToNotion(extendedNeighborhoods);
 })();

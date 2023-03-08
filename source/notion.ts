@@ -18,7 +18,7 @@ type NotionDatabaseQueryResult = Widen<QueryDatabaseResponse["results"][number]>
 type NotionPageProperties = NonNullable<UpdatePageParameters["properties"]>;
 type NotionProperty = NotionPageProperties["type"];
 
-type SchemaValue = "multi_select" | "number" | "select" | "title";
+type SchemaValue = "multi_select" | "number" | "select" | "title" | "text" | "url";
 type Schema = { [key: string]: SchemaValue }
 
 type SerializableValue = number | string | string[] | null;
@@ -66,6 +66,17 @@ function convertPropertyToNotionFormat(
           }
         ]
       };
+    case "text":
+      return {
+        "rich_text": [
+          {
+            "type": "text",
+            "text": {
+              "content": value as string
+            }
+          }
+        ]
+      };
     case "number":
       return { number: value as number };
     case "select":
@@ -73,6 +84,8 @@ function convertPropertyToNotionFormat(
     case "multi_select":
       // eslint-disable-next-line no-extra-parens
       return { multi_select: (value as string[]).map(option => ({ name: option })) };
+    case "url":
+      return { url: value as string };
     default:
       throw new Error(`Unknown type ${ type }`);
   }

@@ -59,7 +59,19 @@ export interface NeighborhoodDescription {
   overview: string | null
 }
 
+export interface NeighborhoodGrades {
+  grade: string | null,
+  schools: string | null,
+  safety: string | null,
+  nightlife: string | null,
+  family: string | null,
+  health: string | null,
+  outdoor: string | null,
+  commute: string | null
+}
+
 export interface ExtendedNeighborhood extends
   Neighborhood,
   NeighborhoodDescription,
-  NeighborhoodWalkScore {}
+  NeighborhoodWalkScore,
+  NeighborhoodGrades {}

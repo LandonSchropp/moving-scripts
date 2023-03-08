@@ -9,7 +9,7 @@ const CACHE_DIRECTORY = `${ __dirname }/../cache`;
  * If a cache file does not exist, calls the function and writes the results to a file. If the
  * cache file already exists, returns the contents of the file.
  */
-export async function cache(fileName: string, func: () => Promise<string>) {
+export async function cache(fileName: string, func: () => Promise<string | null>) {
   const cachePath = `${ CACHE_DIRECTORY }/${ fileName }`;
 
   if (await pathExists(cachePath)) {
@@ -17,6 +17,10 @@ export async function cache(fileName: string, func: () => Promise<string>) {
   }
 
   const result = await func();
+
+  if (result === null) {
+    return null;
+  }
 
   await mkdirp(CACHE_DIRECTORY);
   await writeFile(cachePath, result);
@@ -29,10 +33,11 @@ export async function cache(fileName: string, func: () => Promise<string>) {
  */
 export async function cacheJSON(fileName: string, func: () => Promise<JSONValue>) {
   const result = await cache(fileName, async () => {
-    return JSON.stringify(await func(), null, 2);
+    const funcResult = await func();
+    return funcResult === null ? null : JSON.stringify(funcResult, null, 2);
   });
 
-  return JSON.parse(result);
+  return result === null ? null : JSON.parse(result);
 }
 
 /**

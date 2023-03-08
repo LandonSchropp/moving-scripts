@@ -6,11 +6,25 @@ const NEIGHBORHOODS_DATABASE_ID = "a93092efcbc446dd99020c4beea8094e";
 const SCHEMA = {
   neighborhood: "title",
   quadrant: "select",
+
+  // Walk Score
   walkScore: "number",
   bikeScore: "number",
   transitScore: "number",
+
+  // Description
   overview: "url",
-  description: "text"
+  description: "text",
+
+  // Grades
+  grade: "select",
+  schools: "select",
+  safety: "select",
+  nightlife: "select",
+  family: "select",
+  health: "select",
+  outdoor: "select",
+  commute: "select"
 } as const;
 
 export async function syncNeighborhoodsToNotion(neighborhoods: ExtendedNeighborhood[]) {

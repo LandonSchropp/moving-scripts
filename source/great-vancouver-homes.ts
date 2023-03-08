@@ -14,6 +14,15 @@ type PartialQuadrant = {
   neighborhoods: PartialNeighborhood[]
 }
 
+const EXCLUDED_NEIGHBORHOODS = [
+  "South Portland",
+  "Nob Hill"
+];
+
+const NEIGHBORHOOD_RENAMES = {
+  "Humbolt": "Humboldt"
+};
+
 export async function fetchPortlandNeighborhoods() {
   return await cacheJSON("portland-neighborhoods.json", async () => {
     const response = await scrapeIt(NEIGHBORHOODS_URL, {
@@ -29,7 +38,8 @@ export async function fetchPortlandNeighborhoods() {
             data: {
               neighborhood: {
                 selector: "a",
-                trim: true
+                trim: true,
+                convert: value => NEIGHBORHOOD_RENAMES[value] ?? value
               }
             }
           }
@@ -37,8 +47,13 @@ export async function fetchPortlandNeighborhoods() {
       }
     }) as { data: { quadrants: PartialQuadrant[] } };
 
-    return response.data.quadrants.map(({ quadrant, neighborhoods }) => {
-      return neighborhoods.map((neighborhood) => ({ ...neighborhood, quadrant }));
-    }).flat();
+    return response.data.quadrants
+      .map(({ quadrant, neighborhoods }) => {
+        return neighborhoods.map((neighborhood) => ({ ...neighborhood, quadrant }));
+      })
+      .flat()
+      .filter(({ neighborhood, quadrant }) => {
+        return neighborhood !== quadrant && !EXCLUDED_NEIGHBORHOODS.includes(neighborhood);
+      });
   }) as Neighborhood[];
 }

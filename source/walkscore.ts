@@ -6,8 +6,15 @@ import { parseNumber } from "./utilities";
 
 const BASE_URL = "https://www.walkscore.com/OR/Portland";
 
+const URL_OVERRIDES = {
+  "Pearl District": "Pearl"
+};
+
 function neighborhoodUrl(neighborhood: Neighborhood) {
-  return `${ BASE_URL }/${ neighborhood.neighborhood.replaceAll(" ", "_") }`;
+  const path = URL_OVERRIDES[neighborhood.neighborhood]
+    ?? neighborhood.neighborhood.replaceAll(" ", "_");
+
+  return `${ BASE_URL }/${ path }`;
 }
 
 export async function fetchNeighborhoodWalkScore(

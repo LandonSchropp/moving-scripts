@@ -8,7 +8,9 @@ const SCHEMA = {
   quadrant: "select",
   walkScore: "number",
   bikeScore: "number",
-  transitScore: "number"
+  transitScore: "number",
+  overview: "url",
+  description: "text"
 } as const;
 
 export async function syncNeighborhoodsToNotion(neighborhoods: ExtendedNeighborhood[]) {

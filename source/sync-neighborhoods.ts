@@ -1,12 +1,14 @@
 import { fetchPortlandNeighborhoods } from "./great-vancouver-homes";
 import { syncNeighborhoodsToNotion } from "./notion-neighborhoods";
+import { fetchNeighborhoodDescription } from "./portland-gov";
 import { ExtendedNeighborhood, Neighborhood } from "./types";
 import { fetchNeighborhoodWalkScore } from "./walkscore";
 
 async function extendNeighborhood(neighborhood: Neighborhood) : Promise<ExtendedNeighborhood> {
   return {
     ...neighborhood,
-    ...await fetchNeighborhoodWalkScore(neighborhood)
+    ...await fetchNeighborhoodWalkScore(neighborhood),
+    ...await fetchNeighborhoodDescription(neighborhood)
   };
 }
 

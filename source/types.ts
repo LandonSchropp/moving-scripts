@@ -49,11 +49,17 @@ export interface Neighborhood {
 }
 
 export interface NeighborhoodWalkScore {
-  walkScore: number,
-  transitScore: number,
-  bikeScore: number
+  walkScore: number | null,
+  transitScore: number | null,
+  bikeScore: number | null
+}
+
+export interface NeighborhoodDescription {
+  description: string | null,
+  overview: string | null
 }
 
 export interface ExtendedNeighborhood extends
   Neighborhood,
+  NeighborhoodDescription,
   NeighborhoodWalkScore {}
